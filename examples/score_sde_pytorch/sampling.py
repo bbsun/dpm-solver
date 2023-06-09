@@ -553,6 +553,6 @@ def get_dpm_solver_sampler(sde, shape, inverse_scaler, steps=10, eps=1e-3,
         rtol=rtol,
         lower_order_final=False,
       )
-      return inverse_scaler(x), steps
+      return x, steps
 
   return dpm_solver_sampler
