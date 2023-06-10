@@ -16,7 +16,7 @@ def get_default_configs():
     config.training.snapshot_sampling = True
     config.training.likelihood_weighting = False
     config.training.continuous = True
-    config.training.reduce_mean = False
+    config.training.reduce_mean = True
 
     # sampling
     config.sampling = ml_collections.ConfigDict()
@@ -92,7 +92,7 @@ def get_config():
   sampling.algorithm_type = 'dpmsolver'
   sampling.thresholding = False
   sampling.noise_removal = False
-  sampling.steps = 10
+  sampling.steps = 30
   sampling.skip_type = 'logSNR'
   sampling.rtol = 0.05
 

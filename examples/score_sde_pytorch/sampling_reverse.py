@@ -527,7 +527,7 @@ def get_dpm_solver_sampler(sde, shape, inverse_scaler, steps=10, eps=1e-3,
   """
   ns = NoiseScheduleVP('linear', continuous_beta_0=sde.beta_0, continuous_beta_1=sde.beta_1)
 
-  def dpm_solver_sampler(model,start=None):
+  def dpm_solver_sampler(model, start):
     """ The DPM-Solver sampler funciton.
 
     Args:
@@ -539,14 +539,12 @@ def get_dpm_solver_sampler(sde, shape, inverse_scaler, steps=10, eps=1e-3,
       noise_pred_fn = get_noise_fn(sde, model, train=False, continuous=True)
       dpm_solver = DPM_Solver(noise_pred_fn, ns, algorithm_type=algorithm_type, correcting_x0_fn="dynamic_thresholding" if thresholding else None)
       # Initial sample
-      x = sde.prior_sampling(shape).to(device)
-      if start is not None:
-        x = start.to(device)
+      x = start.to(device)
       x = dpm_solver.sample(
         x,
         steps=steps - 1 if denoise else steps,
-        t_start=sde.T,
-        t_end=eps,
+        t_start=eps,
+        t_end=sde.T,
         order=order,
         skip_type=skip_type,
         method=method,

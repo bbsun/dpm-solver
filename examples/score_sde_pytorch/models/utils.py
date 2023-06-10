@@ -172,7 +172,7 @@ def get_score_fn(sde, model, train=False, continuous=False):
   if isinstance(sde, sde_lib.VPSDE) or isinstance(sde, sde_lib.subVPSDE):
     def score_fn(x, t):
       # Scale neural network output by standard deviation and flip sign
-      if continuous or isinstance(sde, sde_lib.subVPSDE):
+      if True:
         # For VP-trained models, t=0 corresponds to the lowest noise level
         # The maximum value of time embedding is assumed to 999 for
         # continuously-trained models.

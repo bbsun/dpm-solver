@@ -36,22 +36,21 @@ class unetConv2(nn.Module):
         self.relu1_T    = nn.ReLU()
         self.relu2_T    = nn.ReLU()
     def forward(self, inputs):
-        L0, X0, T0 = inputs
+        L0, T0 = inputs
         nb,nc,nh,nw = L0.shape
         L1    = self.relu1_L(self.batch1_L(self.conv1_L(L0)))
         L     = self.relu2_L(self.batch2_L(self.conv2_L(L1)))
-        X1    = self.relu1_X(self.batch1_X(self.conv1_X(X0)))
-        X     = self.relu2_X(self.batch2_X(self.conv2_X(X1)))
+        #X1    = self.relu1_X(self.batch1_X(self.conv1_X(X0)))
+        #X     = self.relu2_X(self.batch2_X(self.conv2_X(X1)))
         T     = self.time_emb(T0)[:,:,None,None].repeat(1,1,nh,nw)
         T     = self.conv1_T(T)
-        XTOL  = self.conv3_XTOL(X)
+        #XTOL  = self.conv3_XTOL(X)
         #TTOL  = self.conv3_TTOL(T)
         TTOL  = T
         #print(f'L shape {L.shape} XTOL shape {XTOL.shape} TTOL shape {TTOL.shape}')
-        L     = self.relu3_L(self.batch3_L(L+ XTOL + TTOL))
+        L     = self.relu3_L(self.batch3_L(L + TTOL))
         L     = L + L1
-        X     = X + X1
-        return L, X0, T0
+        return L, T0
     def initialize_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -66,10 +65,9 @@ class unetDown(nn.Module):
         self.down = nn.MaxPool2d((2, 2),ceil_mode=True)
     def forward(self, inputs):
         outputs = self.conv(inputs)
-        L,X,T = outputs
+        L,T = outputs
         L = self.down(L)
-        X = self.down(X)
-        outputs_down = (L,X,T)
+        outputs_down = (L,T)
         return outputs,outputs_down
 class unetUp(nn.Module):
     def __init__(self, in_size, out_size):
@@ -77,12 +75,11 @@ class unetUp(nn.Module):
         self.conv = unetConv2( in_size, out_size )
         self.up = nn.Upsample( scale_factor=2)
     def forward(self, inputs1, inputs2 ):
-        L1,X1,T1 = inputs1
-        L,X,T = inputs2
+        L1, T1 = inputs1
+        L, T = inputs2
         L2    = self.up(L)
         L     = torch.cat([L1,L2],1)
-        X     = self.up(X)
-        return self.conv((L,X,T))
+        return self.conv((L,T))
 import math
 class TimeEmbedding(nn.Module):
     """
@@ -207,19 +204,18 @@ class  UnetModel_DDPM(nn.Module):
     def forward(self,L00,T00):
         L = L00
         T = T00
-        X = torch.zeros_like(L)
         T = self.time_emb(T)
-        inputs = L,X,T
+        inputs = L,T
         down10,down1  = self.down1(inputs)
         down20,down2  = self.down2(down1)
         down30,down3  = self.down3(down2)
         center        = self.center(down3)
-        L,X,T         = center
+        L,T         = center
         #L = self.att(L,T)
-        center        = L,X,T
+        center        = L,T
         up3           = self.up3(down30,center)
         up2           = self.up2(down20,up3)
         up1           = self.up1(down10,up2)
-        L,X,T         = up1
+        L,T         = up1
         out = self.final(L)
         return out
